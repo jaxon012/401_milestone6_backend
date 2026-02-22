@@ -32,7 +32,7 @@ export const api = {
             wordId: z.number(),
             status: z.string(),
             timesSeen: z.number(),
-            lastSeenAt: z.date().nullable(),
+            lastSeenAt: z.union([z.string(), z.date()]).nullable(),
           }).optional(),
         })),
       },

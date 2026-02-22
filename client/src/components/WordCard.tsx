@@ -18,16 +18,13 @@ export function WordCard({ word, index }: WordCardProps) {
   const status = word.userWordProgress?.status || "new";
   const isMastered = status === "mastered";
 
-  // Debug logging
-  console.log("WordCard data:", { word, userWordId, status, isMastered });
 
-  const handleMarkAsMastered = () => {
-    console.log("Mark as Mastered clicked, userWordId:", userWordId);
+  const handleMarkAsMastered = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card collapse when clicking the button
     if (userWordId) {
-      console.log("Calling updateProgress with userWordId:", userWordId);
       updateProgress({ userWordId });
     } else {
-      console.warn("userWordId is undefined!");
+      console.warn("userWordId is undefined - no progress record for this word");
     }
   };
 

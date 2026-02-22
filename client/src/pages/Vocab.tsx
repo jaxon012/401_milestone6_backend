@@ -5,7 +5,7 @@ import { Search, Filter } from "lucide-react";
 import { useState } from "react";
 
 export default function Vocab() {
-  const { data: words, isLoading } = useWords();
+  const { data: words, isLoading, isError, error } = useWords();
   const [search, setSearch] = useState("");
 
   console.log("Vocab page - words data:", words);
@@ -57,7 +57,12 @@ export default function Vocab() {
 
       {/* Words List */}
       <div className="space-y-3">
-        {isLoading ? (
+        {isError ? (
+          <div className="text-center py-12 text-destructive">
+            <p>Failed to load words: {error?.message}</p>
+            <p className="text-sm text-muted-foreground mt-2">Check the console and ensure the server is running.</p>
+          </div>
+        ) : isLoading ? (
           // Skeleton Loading
           Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="h-20 bg-secondary/50 rounded-2xl animate-pulse" />
