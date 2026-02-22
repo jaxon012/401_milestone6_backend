@@ -12,11 +12,11 @@ Language Learning Adventure is a gamified language learning platform designed to
 ## Architecture Diagram
 ```mermaid
 graph TD
-    User[User] -->|Interacts via Browser| Client[Frontend (React/Vite)]
-    Client -->|HTTP Requests/WebSocket| Server[Backend (Express/Node.js)]
-    Server -->|SQL Queries| DB[(PostgreSQL Database)]
-    Server -->|API Calls| OpenAI[OpenAI API]
-    Server -->|Audio processing| Audio[Replit Audio Service]
+    User[User] -->|Interacts via Browser| Client["Frontend (React/Vite)"]
+    Client -->|HTTP Requests/WebSocket| Server["Backend (Express/Node.js)"]
+    Server -->|SQL Queries| DB[("PostgreSQL Database")]
+    Server -->|API Calls| OpenAI["OpenAI API"]
+    Server -->|Audio processing| Audio["Replit Audio Service"]
 ```
 
 ## Prerequisites
