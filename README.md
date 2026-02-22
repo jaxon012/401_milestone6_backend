@@ -40,9 +40,11 @@ psql --version
     ```
 
 2.  **Set Up the Database**:
-    Create a new PostgreSQL database for the application. You can do this using the `createdb` command or through the `psql` shell:
+    Create a new PostgreSQL database for the application and initialize it with the schema:
     ```bash
     createdb language_app
+    psql -d language_app -f db/schema.sql
+    psql -d language_app -f db/seed.sql
     ```
 
 3.  **Configure Environment Variables**:
@@ -51,13 +53,6 @@ psql --version
     DATABASE_URL=postgresql://username:password@localhost:5432/language_app
     OPENAI_API_KEY=your_openai_api_key_here
     ```
-
-4.  **Initialize the Database**:
-    Push the database schema using Drizzle Kit:
-    ```bash
-    npm run db:push
-    ```
-    *Note: The application will automatically seed initial data (words and reading passages) on the first startup.*
 
 ## Running the Application
 
@@ -71,20 +66,42 @@ psql --version
     Open your web browser and navigate to:
     [http://localhost:5000](http://localhost:5000)
 
-## Verifying the Vertical Slice
+## Verifying the Vertical Slice: Mark as Mastered
 
-To verify that the application and database are connected and functioning correctly (the Vertical Slice), follow these steps:
+To verify the complete vertical slice (frontend button → backend update → database change → UI refresh), follow these steps:
 
 1.  **Launch the App**: Open the application in your browser at [http://localhost:5000](http://localhost:5000).
-2.  **Check Initial Data**: Navigate to the "Daily Vocab" section. You should see a list of words (e.g., "application", "work", "employee") that were populated automatically on startup.
-3.  **Trigger a Database Action**:
-    *   Navigate to the **Adventure** page (via the "Continue Journey" or sidebar link).
-    *   Start a new adventure or interact with the storyline.
-    *   Alternatively, simple navigation to the **Daily Vocab** page triggers a `GET` request to `/api/words` which queries the `words` table in the database.
-4.  **Verify Persistence**:
-    *   Reload the page.
-    *   Confirm that the vocabulary words are still displayed, proving that data is being successfully retrieved from the PostgreSQL database and not just held in memory.
-5.  **Database Inspection (Optional)**:
-    *   Open your terminal and connect to the database: `psql -d language_app`
-    *   Run `SELECT * FROM words;` to verify the data exists directly in the database.
+
+2.  **Navigate to Daily Vocab**: Click on the "Vocabulary" page in the navigation. You should see a list of words with their definitions (e.g., "application", "work", "employee").
+
+3.  **Expand a Word Card**: Click on any word card to expand it and view the full definition, pronunciation, and usage statistics.
+
+4.  **Mark as Mastered**: Click the "Mark as Mastered" button inside the expanded word card. You should see:
+    - The button change to show "✓ Mastered" with a green background
+    - The status in the card header changes from "Status: new" to "✓ Mastered"
+    - The word card icon changes to a checkmark
+
+5.  **Verify Data Refresh**: After clicking "Mark as Mastered", the page automatically refreshes the data. Scroll up to see the stats header update with an incremented "MASTERED" count.
+
+6.  **Verify Persistence on Page Refresh**: 
+    - Refresh the browser (F5 or Cmd+R)
+    - Navigate back to the Vocabulary page
+    - The word should still show as "✓ Mastered", proving the change persisted in the database
+
+7.  **Database Inspection (Optional)**:
+    - Open a terminal and connect to the database: `psql -d language_app`
+    - Run the following query to see all word progress records:
+      ```sql
+      SELECT user_id, word_id, status, times_seen, last_seen_at 
+      FROM user_word_progress 
+      WHERE user_id = 1;
+      ```
+    - Verify that the word you marked as mastered shows `status = 'mastered'` and `times_seen = 1` with a recent `last_seen_at` timestamp.
+
+### What This Vertical Slice Demonstrates
+
+- **Frontend**: React component with React Query mutation handling user interaction
+- **Backend**: Express route that accepts PATCH request and updates database
+- **Database**: PostgreSQL table (`user_word_progress`) stores and persists the changes
+- **Data Flow**: User click → API request → Database update → Query invalidation → UI re-render → Persistence on refresh
 

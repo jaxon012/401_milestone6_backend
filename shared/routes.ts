@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { insertUserSchema, insertWordSchema, insertReadingPassageSchema, words, readingPassages } from './schema';
+import { insertUserSchema, insertWordSchema, insertPassageSchema, word, userWordProgress, passage, type UserWordProgress, type Passage } from './schema';
 
 export const errorSchemas = {
   validation: z.object({
@@ -20,7 +20,38 @@ export const api = {
       method: 'GET' as const,
       path: '/api/words' as const,
       responses: {
-        200: z.array(z.custom<typeof words.$inferSelect>()),
+        200: z.array(z.object({
+          wordId: z.number(),
+          term: z.string(),
+          definition: z.string(),
+          phonetic: z.string().nullable(),
+          audioUrl: z.string().nullable(),
+          userWordProgress: z.object({
+            userWordId: z.number(),
+            userId: z.number(),
+            wordId: z.number(),
+            status: z.string(),
+            timesSeen: z.number(),
+            lastSeenAt: z.date().nullable(),
+          }).optional(),
+        })),
+      },
+    },
+  },
+  wordProgress: {
+    update: {
+      method: 'PATCH' as const,
+      path: '/api/word-progress/:userWordId' as const,
+      responses: {
+        200: z.object({
+          userWordId: z.number(),
+          userId: z.number(),
+          wordId: z.number(),
+          status: z.string(),
+          timesSeen: z.number(),
+          lastSeenAt: z.date().nullable(),
+        }),
+        404: errorSchemas.notFound,
       },
     },
   },
@@ -29,14 +60,14 @@ export const api = {
         method: 'GET' as const,
         path: '/api/reading-passages' as const,
         responses: {
-            200: z.array(z.custom<typeof readingPassages.$inferSelect>()),
+            200: z.array(z.custom<Passage>()),
         },
     },
     get: {
         method: 'GET' as const,
         path: '/api/reading-passages/:id' as const,
         responses: {
-            200: z.custom<typeof readingPassages.$inferSelect>(),
+            200: z.custom<Passage>(),
             404: errorSchemas.notFound,
         },
     }

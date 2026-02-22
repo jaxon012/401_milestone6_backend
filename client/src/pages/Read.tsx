@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Book, Clock, Volume2, X } from "lucide-react";
 import { useState } from "react";
 import { AudioPlayer } from "@/components/AudioPlayer";
+import type { Passage } from "@shared/schema";
 
 // Interactive word component
 function ClickableWord({ word, onClick }: { word: string; onClick: (w: string) => void }) {
@@ -25,15 +26,23 @@ export default function Read() {
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
 
   // For prototype, we'll just use the first passage or a fallback
-  const passage = passages?.[0] || {
-    id: 0,
+  const passage = (passages?.[0] as Passage | undefined) || {
+    passageId: 0,
     title: "The Morning Routine",
+    bodyText: "Every morning, Sarah wakes up at 7:00 AM. She brushes her teeth and washes her face. Then, she goes to the kitchen to make breakfast. She usually eats toast with jam and drinks a cup of coffee. After breakfast, she gets dressed and walks to the bus stop to go to work.",
+    readingLevel: 1,
+    audioUrl: "https://images.unsplash.com/photo-1493770348161-369560ae357d?w=800&q=80",
+    // Compatibility fields
+    id: 0,
     content: "Every morning, Sarah wakes up at 7:00 AM. She brushes her teeth and washes her face. Then, she goes to the kitchen to make breakfast. She usually eats toast with jam and drinks a cup of coffee. After breakfast, she gets dressed and walks to the bus stop to go to work.",
     level: "Beginner",
     imageUrl: "https://images.unsplash.com/photo-1493770348161-369560ae357d?w=800&q=80"
-  };
+  } as Passage;
 
-  const words = passage.content.split(" ");
+  const content = (passage as any).content || passage.bodyText || "";
+  const words = content.split(" ");
+  const imageUrl = ((passage as any).imageUrl || passage.audioUrl || "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80") as string;
+  const level = ((passage as any).level || passage.readingLevel?.toString() || "Beginner") as string;
 
   return (
     <Layout title="Reading Practice">
@@ -42,13 +51,13 @@ export default function Read() {
         <div className="relative h-48 rounded-3xl overflow-hidden shadow-lg">
           {/* Morning coffee scene */}
           <img 
-            src={passage.imageUrl || "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80"} 
+            src={imageUrl} 
             alt="Reading context" 
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-6">
             <span className="text-xs font-bold text-primary-foreground bg-primary/90 px-2 py-1 rounded-md w-fit mb-2 backdrop-blur-sm">
-              {passage.level}
+              {level}
             </span>
             <h2 className="text-2xl font-bold text-white">{passage.title}</h2>
           </div>
@@ -77,7 +86,7 @@ export default function Read() {
             </div>
           ) : (
             <p>
-              {words.map((word, i) => (
+              {words.map((word: string, i: number) => (
                 <ClickableWord key={i} word={word} onClick={setSelectedWord} />
               ))}
             </p>

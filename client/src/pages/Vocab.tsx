@@ -8,10 +8,17 @@ export default function Vocab() {
   const { data: words, isLoading } = useWords();
   const [search, setSearch] = useState("");
 
+  console.log("Vocab page - words data:", words);
+
   const filteredWords = words?.filter(w => 
-    w.word.toLowerCase().includes(search.toLowerCase()) || 
-    w.translation.toLowerCase().includes(search.toLowerCase())
+    w.term.toLowerCase().includes(search.toLowerCase()) || 
+    w.definition.toLowerCase().includes(search.toLowerCase())
   );
+
+  // Calculate stats from the words with progress
+  const learnedCount = words?.filter(w => w.userWordProgress?.status === "learned").length || 0;
+  const masteredCount = words?.filter(w => w.userWordProgress?.status === "mastered").length || 0;
+  const newCount = words?.filter(w => !w.userWordProgress || w.userWordProgress?.status === "new").length || 0;
 
   return (
     <Layout title="Vocabulary">
@@ -34,17 +41,17 @@ export default function Vocab() {
 
       {/* Stats Header */}
       <div className="mb-6 flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+        <div className="bg-green-500/10 border border-green-500/20 px-4 py-3 rounded-2xl min-w-[120px]">
+          <p className="text-xs font-semibold text-green-600 mb-1">MASTERED</p>
+          <p className="text-2xl font-display font-bold text-green-700">{masteredCount}</p>
+        </div>
         <div className="bg-blue-500/10 border border-blue-500/20 px-4 py-3 rounded-2xl min-w-[120px]">
           <p className="text-xs font-semibold text-blue-600 mb-1">LEARNED</p>
-          <p className="text-2xl font-display font-bold text-blue-700">142</p>
-        </div>
-        <div className="bg-orange-500/10 border border-orange-500/20 px-4 py-3 rounded-2xl min-w-[120px]">
-          <p className="text-xs font-semibold text-orange-600 mb-1">TO REVIEW</p>
-          <p className="text-2xl font-display font-bold text-orange-700">18</p>
+          <p className="text-2xl font-display font-bold text-blue-700">{learnedCount}</p>
         </div>
         <div className="bg-purple-500/10 border border-purple-500/20 px-4 py-3 rounded-2xl min-w-[120px]">
           <p className="text-xs font-semibold text-purple-600 mb-1">NEW</p>
-          <p className="text-2xl font-display font-bold text-purple-700">5</p>
+          <p className="text-2xl font-display font-bold text-purple-700">{newCount}</p>
         </div>
       </div>
 
@@ -61,7 +68,7 @@ export default function Vocab() {
           </div>
         ) : (
           filteredWords?.map((word, index) => (
-            <WordCard key={word.id} word={word} index={index} />
+            <WordCard key={word.wordId} word={word} index={index} />
           ))
         )}
       </div>

@@ -1,16 +1,35 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Sparkles } from "lucide-react";
+import { ChevronDown, Sparkles, Check } from "lucide-react";
 import { AudioPlayer } from "./AudioPlayer";
+import { useUpdateWordProgress } from "@/hooks/use-word-progress";
 import type { Word } from "@shared/schema";
 
 interface WordCardProps {
-  word: Word;
+  word: Word & { userWordProgress?: any };
   index: number;
 }
 
 export function WordCard({ word, index }: WordCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const { mutate: updateProgress, isPending } = useUpdateWordProgress();
+
+  const userWordId = word.userWordProgress?.userWordId;
+  const status = word.userWordProgress?.status || "new";
+  const isMastered = status === "mastered";
+
+  // Debug logging
+  console.log("WordCard data:", { word, userWordId, status, isMastered });
+
+  const handleMarkAsMastered = () => {
+    console.log("Mark as Mastered clicked, userWordId:", userWordId);
+    if (userWordId) {
+      console.log("Calling updateProgress with userWordId:", userWordId);
+      updateProgress({ userWordId });
+    } else {
+      console.warn("userWordId is undefined!");
+    }
+  };
 
   return (
     <motion.div
@@ -27,18 +46,26 @@ export function WordCard({ word, index }: WordCardProps) {
         onClick={() => setIsExpanded(!isExpanded)}
         className="p-4 flex items-center justify-between cursor-pointer"
       >
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold text-lg">
-            {word.word.charAt(0).toUpperCase()}
+        <div className="flex items-center gap-4 flex-1">
+          <div className={`
+            w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg
+            ${isMastered 
+              ? 'bg-green-500/10 text-green-600' 
+              : 'bg-primary/10 text-primary'
+            }
+          `}>
+            {isMastered ? <Check className="w-5 h-5" /> : word.term.charAt(0).toUpperCase()}
           </div>
           <div>
-            <h3 className="font-bold text-lg text-foreground leading-tight">{word.word}</h3>
-            <p className="text-sm text-muted-foreground">{word.translation}</p>
+            <h3 className="font-bold text-lg text-foreground leading-tight">{word.term}</h3>
+            <p className="text-sm text-muted-foreground">
+              {isMastered ? "✓ Mastered" : `Status: ${status}`}
+            </p>
           </div>
         </div>
         
         <div className="flex items-center gap-2">
-          <AudioPlayer text={word.word} />
+          <AudioPlayer text={word.term} />
           <motion.div
             animate={{ rotate: isExpanded ? 180 : 0 }}
             transition={{ duration: 0.2 }}
@@ -62,13 +89,40 @@ export function WordCard({ word, index }: WordCardProps) {
                 <span className="text-xs font-semibold text-primary uppercase tracking-wider">Definition</span>
                 <p className="text-sm text-foreground/80 leading-relaxed">{word.definition}</p>
               </div>
-              
-              {word.exampleSentence && (
-                <div className="bg-background rounded-xl p-3 border border-border/50 flex gap-3">
-                  <Sparkles className="w-4 h-4 text-accent shrink-0 mt-0.5" />
-                  <p className="text-sm italic text-muted-foreground">"{word.exampleSentence}"</p>
+
+              {word.phonetic && (
+                <div className="space-y-1">
+                  <span className="text-xs font-semibold text-primary uppercase tracking-wider">Pronunciation</span>
+                  <p className="text-sm text-muted-foreground">{word.phonetic}</p>
                 </div>
               )}
+
+              {word.userWordProgress && (
+                <div className="bg-background rounded-xl p-3 border border-border/50">
+                  <div className="flex justify-between text-xs mb-2">
+                    <span className="text-muted-foreground">Times Seen: {word.userWordProgress.timesSeen}</span>
+                    {word.userWordProgress.lastSeenAt && (
+                      <span className="text-muted-foreground">
+                        Last: {new Date(word.userWordProgress.lastSeenAt).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <button
+                onClick={handleMarkAsMastered}
+                disabled={isMastered || isPending}
+                className={`
+                  w-full py-2 px-4 rounded-xl font-semibold text-sm transition-all
+                  ${isMastered
+                    ? "bg-green-500/20 text-green-600 cursor-default"
+                    : "bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50"
+                  }
+                `}
+              >
+                {isPending ? "Updating..." : isMastered ? "✓ Mastered" : "Mark as Mastered"}
+              </button>
             </div>
           </motion.div>
         )}
